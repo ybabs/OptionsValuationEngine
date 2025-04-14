@@ -11,12 +11,12 @@ public:
 
     double getEuropeanCallPrice() const
     {
-        return pricer_->priceEuropeanCall();
+        return pricer_->priceCall();
     }
 
     double getEuropeanPutPrice() const
     {
-        return pricer_->priceEuropeanPut();
+        return pricer_->pricePut();
     }
 
     // TODO Retrieve greeks here

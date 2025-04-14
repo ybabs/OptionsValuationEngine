@@ -1,5 +1,9 @@
+#pragma once
+
 #include <cmath>
 
+
+static constexpr double AVERAGE_DAYS_IN_YEAR = 365.25;
 
 // Abstact Base class for Options Pricers.
 //This should serve as a common interface for all pricing models
@@ -14,9 +18,14 @@ class IOptionPricer
 
 
     // Pure virtual function for pricing European Call and Put Options
-    virtual double priceEuropeanCall() const = 0;
-    virtual double priceEuropeanPut() const = 0;
+    virtual double priceCall() const = 0;
+    virtual double pricePut() const = 0;
 
     
-    // Add virtual function for greeks later
+    virtual double deltaCall() const = 0;
+    virtual double deltaPut() const = 0;
+    virtual double gamma() const = 0;
+    virtual double vega() const  = 0;
+    virtual double thetaCall() const = 0;
+    virtual double rhoCall() const = 0;
 };

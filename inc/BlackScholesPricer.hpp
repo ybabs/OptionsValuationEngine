@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cmath>
-
+#include <chrono>
 #include "IOptionPricer.hpp"
 
 
@@ -12,8 +12,16 @@ class BlackScholesOptionsPricer : public IOptionPricer
 
 public:
     BlackScholesOptionsPricer(double S, double K, double T, double r, double sigma);
-    double priceEuropeanCall() const override;
-    double priceEuropeanPut() const override;
+    BlackScholesOptionsPricer(double S, double K, const std::chrono::year_month_day &expirationDate, double r, 
+                                double sigma, const std::chrono::year_month_day& valuationDate);
+    double priceCall() const override;
+    double pricePut() const override;
+    double deltaCall() const override;
+    double deltaPut() const override;
+    double gamma() const  override;
+    double vega() const   override;
+    double thetaCall() const  override;
+    double rhoCall() const override;
 
 
 private:

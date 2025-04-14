@@ -1,7 +1,8 @@
-#include "BlackScholesPricer.hpp"
-#include "ValuationEngine.h"
+#include "OptionBuilder.hpp"
+#include "OptionTypes.hpp"
 #include <iostream>
 #include <memory>
+#include <chrono>
 
 
 int main() {
@@ -14,13 +15,26 @@ int main() {
     double r = 0.05;    // Risk-free interest rate (5%)
     double sigma = 0.2; // Volatility (20%)
 
+    std::chrono::year_month_day expirationDate{std::chrono::year{2025}, std::chrono::month{12}, std::chrono::day{31}};
+    std::chrono::sys_days today = floor<std::chrono::days>(std::chrono::system_clock::now());
+    std::chrono::year_month_day valuationDate{today};
 
-    std::unique_ptr<IOptionPricer> bsPricer = std::make_unique<BlackScholesOptionsPricer>(S, K, T, r, sigma);
 
-    ValuationEngine engine(std::move(bsPricer));
+    OptionBuilder builder;
+    builder.setStyle(OptionStyle::European)
+           .setType(OptionType::Call)
+           .setUnderlying(S)
+           .setStrike(K)
+           .setRiskFreeRate(r)
+           .setVolatility(sigma)
+           .setExpirationDate(expirationDate)
+           .setValuationDate(valuationDate);
 
-    std::cout << "European Call Option Price: " << engine.getEuropeanCallPrice() << std::endl;
-    std::cout << "European Put Option Price: " << engine.getEuropeanPutPrice() << std::endl;
+    std::unique_ptr<IOptionPricer> pricer = builder.build();
+
+    // Retrieve and display option prices.
+    std::cout << "European Call Option Price: " << pricer->priceCall() << std::endl;
+    std::cout << "European Put Option Price: " << pricer->pricePut() << std::endl;
 
     return 0;
 }

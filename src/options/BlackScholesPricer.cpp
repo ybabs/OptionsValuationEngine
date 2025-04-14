@@ -1,4 +1,5 @@
 #include "BlackScholesPricer.hpp"
+#include <chrono>
 #include <cmath>
 
 
@@ -15,7 +16,19 @@ S_(S), K_(K), T_(T), r_(r), sigma_(sigma)
 
 }
 
-double BlackScholesOptionsPricer::priceEuropeanCall() const
+BlackScholesOptionsPricer::BlackScholesOptionsPricer(double S, double K, const std::chrono::year_month_day &expirationDate, double r, 
+    double sigma, const std::chrono::year_month_day& valuationDate):S_(S), K_(K), r_(r), sigma_(sigma)
+{
+    std::chrono::sys_days expSysDays{expirationDate};
+    std::chrono::sys_days valSysDays{valuationDate};
+
+    // compute the difference in days
+    auto diff = expSysDays - valSysDays;
+    T_ = static_cast<double>(diff.count()) / AVERAGE_DAYS_IN_YEAR;
+    
+}
+
+double BlackScholesOptionsPricer::priceCall() const
 {
     auto d = computeD1D2();
 
@@ -26,7 +39,7 @@ double BlackScholesOptionsPricer::priceEuropeanCall() const
     return call;
 }
 
-double BlackScholesOptionsPricer::priceEuropeanPut() const 
+double BlackScholesOptionsPricer::pricePut() const 
 {
     auto d = computeD1D2();
 
@@ -52,7 +65,49 @@ double BlackScholesOptionsPricer::normCdf(double x) const
     return 0.5 * std::erfc(-x/std::sqrt(2.0));
 }
 
+// Delta of the call option is the rate of change of the option price wrt changes in the underlyinf asset's price
+// Using Black scholes, apply the cumulative NDF to d1
+double BlackScholesOptionsPricer::deltaCall() const
+{
+    auto d = computeD1D2();
+    return normCdf(d.first);
+}
 
+// delta of put option is always negative// should be between -1 and 0
+double BlackScholesOptionsPricer::deltaPut() const
+{
+    auto d = computeD1D2();
+    return -normCdf(-d.first);
+}
+
+// second derivative of option price
+double BlackScholesOptionsPricer::gamma() const 
+{
+    auto d = computeD1D2();
+    double pdf = std::exp(-0.5 * d.first * d.first) / std::sqrt(2 * M_PI);
+
+    return pdf / (S_ * sigma_ * std::sqrt(T_));
+
+}
+double BlackScholesOptionsPricer::vega() const  
+{
+    auto d = computeD1D2();
+    double pdf = std::exp(-0.5 * d.first * d.first) / std::sqrt(2 * M_PI);
+    return S_ * std::sqrt(T_) * pdf;
+}
+double BlackScholesOptionsPricer::thetaCall() const 
+{
+    auto d = computeD1D2();
+    double pdf = std::exp(-0.5 * d.first * d.first) / std::sqrt(2 * M_PI);
+    // Theta (per year)
+    return - (S_ * pdf * sigma_) / (2 * std::sqrt(T_))
+           - r_ * K_ * std::exp(-r_ * T_) * normCdf(d.second);
+}
+double BlackScholesOptionsPricer::rhoCall() const
+{
+    auto d = computeD1D2();
+    return K_ * T_ * std::exp(-r_ * T_) * normCdf(d.second);
+}
 
 
 
